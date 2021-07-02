@@ -1,0 +1,2 @@
+> git checkout -q -b DjangoVersion3 --no-track HEAD
+fatal: 'HEAD' is not a commit and a branch 'DjangoVersion3' cannot be created from it
