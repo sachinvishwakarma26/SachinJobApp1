@@ -13,20 +13,21 @@ Including another URLconf
     1. Import the include() function: from django.conf.urls import url, include
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
-from django.conf.urls import url, include
+#from django.conf.urls import include, re_path
+from django.urls import include, re_path
 from django.contrib import admin
 from testapp import views
 
 
 urlpatterns = [
-    url(r'^admin/', admin.site.urls),
-    url(r'^$', views.index),
-    url(r'^hydjobs/', views.hydjobs1),
-    url(r'^blorejobs/', views.blorejobs1),
-    url(r'^punejobs/', views.punejobs1),
-    url(r'^chennaijobs/', views.chennaijobs1),
-    url(r'^noidajobs/', views.noidajobs1),
-    url(r'^api/', include('testapp.api.urls')),
+    re_path(r'^admin/', admin.site.urls),
+    re_path(r'^$', views.index),
+    re_path(r'^hydjobs/', views.hydjobs1),
+    re_path(r'^blorejobs/', views.blorejobs1),
+    re_path(r'^punejobs/', views.punejobs1),
+    re_path(r'^chennaijobs/', views.chennaijobs1),
+    re_path(r'^noidajobs/', views.noidajobs1),
+    re_path(r'^api/', include('testapp.api.urls')),
 
 
 
