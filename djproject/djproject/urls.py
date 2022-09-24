@@ -28,7 +28,4 @@ urlpatterns = [
     re_path(r'^chennaijobs/', views.chennaijobs1),
     re_path(r'^noidajobs/', views.noidajobs1),
     re_path(r'^api/', include('testapp.api.urls')),
-
-
-
 ]
