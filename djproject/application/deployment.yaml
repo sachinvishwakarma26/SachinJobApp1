@@ -1,0 +1,19 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: djproject
+spec:
+  selector:
+    matchLabels:
+      app: jobapp
+  replicas: 2 # tells deployment to run 2 pods matching the template
+  template:
+    metadata:
+      labels:
+        app: jobapp
+    spec:
+      containers:
+      - name: jobapp
+        image: sachinkumar26/sapiensjobapp:2.0
+        ports:
+        - containerPort: 8000
