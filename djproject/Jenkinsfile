@@ -5,7 +5,7 @@ pipeline {
         // Define the Docker image name and tag for Docker Hub
         DOCKER_IMAGE = "sachinkumar26/djproject:1.0"
         DOCKER_REGISTRY = "docker.io" // Docker Hub registry URL
-        
+
         // Hardcoded Docker credentials (NOT recommended for production)
         DOCKER_USERNAME = "sachinkumar26"
         DOCKER_PASSWORD = "Aarush@123#"
@@ -22,8 +22,13 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    // Build the Docker image using the Dockerfile from the specified path
-                    sh 'docker build -t $DOCKER_IMAGE -f djproject/Dockerfile .'
+                    if (isUnix()) {
+                        // Linux-based Docker build
+                        sh 'docker build -t $DOCKER_IMAGE -f djproject/Dockerfile .'
+                    } else {
+                        // Windows-based Docker build
+                        bat 'docker build -t %DOCKER_IMAGE% -f djproject/Dockerfile .'
+                    }
                 }
             }
         }
@@ -31,8 +36,13 @@ pipeline {
         stage('Run Unit Tests') {
             steps {
                 script {
-                    // Optionally run tests if your Dockerfile has test scripts defined
-                    sh 'docker run $DOCKER_IMAGE pytest'
+                    if (isUnix()) {
+                        // Run tests in Docker container for Linux
+                        sh 'docker run $DOCKER_IMAGE pytest'
+                    } else {
+                        // Run tests in Docker container for Windows
+                        bat 'docker run %DOCKER_IMAGE% pytest'
+                    }
                 }
             }
         }
@@ -40,11 +50,15 @@ pipeline {
         stage('Push Docker Image to Docker Hub') {
             steps {
                 script {
-                    // Log in to Docker Hub using the hardcoded credentials
-                    sh 'docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD $DOCKER_REGISTRY'
-                    
-                    // Push the image to Docker Hub
-                    sh 'docker push $DOCKER_IMAGE'
+                    if (isUnix()) {
+                        // Docker login and push for Linux
+                        sh 'docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD $DOCKER_REGISTRY'
+                        sh 'docker push $DOCKER_IMAGE'
+                    } else {
+                        // Docker login and push for Windows
+                        bat 'docker login -u %DOCKER_USERNAME% -p %DOCKER_PASSWORD% %DOCKER_REGISTRY%'
+                        bat 'docker push %DOCKER_IMAGE%'
+                    }
                 }
             }
         }
@@ -52,8 +66,13 @@ pipeline {
         stage('Deploy') {
             steps {
                 script {
-                    // Run the container locally (optional)
-                    sh 'docker run -d -p 8000:8000 $DOCKER_IMAGE'
+                    if (isUnix()) {
+                        // Run Docker container for Linux
+                        sh 'docker run -d -p 8000:8000 $DOCKER_IMAGE'
+                    } else {
+                        // Run Docker container for Windows
+                        bat 'start /b docker run -d -p 8000:8000 %DOCKER_IMAGE%'
+                    }
                 }
             }
         }
