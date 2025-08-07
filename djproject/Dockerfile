@@ -26,6 +26,8 @@ RUN pip install --upgrade pip
 # Install Python dependencies
 COPY ./requirements.txt /usr/src/app/requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
+# Add this line to install pytest
+RUN pip install pytest
 
 # Copy project files
 COPY . /usr/src/app
