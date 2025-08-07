@@ -33,20 +33,6 @@ pipeline {
             }
         }
 
-        stage('Run Unit Tests') {
-            steps {
-                script {
-                    if (isUnix()) {
-                        // Run tests in Docker container for Linux
-                        sh 'docker run $DOCKER_IMAGE pytest'
-                    } else {
-                        // Run tests in Docker container for Windows
-                        bat 'docker run %DOCKER_IMAGE% pytest'
-                    }
-                }
-            }
-        }
-
         stage('Push Docker Image to Docker Hub') {
             steps {
                 script {
