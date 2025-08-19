@@ -7,6 +7,7 @@ WORKDIR /usr/src/app
 # Set environment variables
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
+ENV DJANGO_SETTINGS_MODULE=djproject.settings
 
 # Install system dependencies
 RUN apk update && apk add --no-cache \
