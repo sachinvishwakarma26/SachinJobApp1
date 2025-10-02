@@ -8,7 +8,7 @@ WORKDIR /usr/src/app
 ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 ENV DJANGO_SETTINGS_MODULE=djproject.settings
-ENV DJANGO_SETTINGS_MODULE=core.settings
+#ENV DJANGO_SETTINGS_MODULE=core.settings
 
 # Install system dependencies
 RUN apk update && apk add --no-cache \
