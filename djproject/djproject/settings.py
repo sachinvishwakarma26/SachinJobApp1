@@ -73,6 +73,11 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = 'djproject.wsgi.application'
+os.environ.setdefault(
+    'DJANGO_SETTINGS_MODULE',
+    'djproject.settings'
+)
+
 
 
 # Database
@@ -126,3 +131,9 @@ STATIC_URL = '/static/'
 STATICFILES_DIRS=[
 STATIC_DIR,
 ]
+
+os.environ.setdefault(
+    'DJANGO_SETTINGS_MODULE',
+    'djproject.settings'
+)
+
