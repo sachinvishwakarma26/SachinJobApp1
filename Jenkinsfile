@@ -24,7 +24,7 @@ pipeline {
                 script {
                     if (isUnix()) {
                         sh '''
-                        docker build -t $DOCKER_IMAGE -f djproject/Dockerfile .
+                        docker build -t sachinkumar26/djproject:1.0 -f djproject\\Dockerfile djproject
                         '''
                     } else {
                         bat '''
