@@ -6,7 +6,7 @@ ENV PYTHONUNBUFFERED=1
 # ✅ Set WORKDIR to djproject directly
 WORKDIR /app/djproject/djproject
 # ✅ Copy only djproject folder contents
-COPY . /app/djproject/djproject
+COPY . /app/djproject
 
 # ✅ Install dependencies
 RUN pip install --no-cache-dir -r requirements.txt
