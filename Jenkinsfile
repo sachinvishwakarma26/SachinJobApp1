@@ -26,7 +26,8 @@ pipeline {
                 dir djproject
 
                 echo "Building Docker image"
-                docker build --no-cache -t sachinkumar26/djproject:1.0 -f djproject/Dockerfile .
+                docker build --no-cache -t sachinkumar26/djproject:1.0 -f djproject\\Dockerfile djproject
+                // docker build --no-cache -t sachinkumar26/djproject:1.0 -f djproject/Dockerfile .
                 '''
             }
         }
