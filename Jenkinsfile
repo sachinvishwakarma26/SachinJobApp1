@@ -21,26 +21,21 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                script {
-                    if (isUnix()) {
-                        sh '''
-                        docker build -t sachinkumar26/djproject:1.0 -f djproject\\Dockerfile djproject
-                        '''
-                    } else {
-                        bat '''
-                        docker build -t %DOCKER_IMAGE% -f djproject\\Dockerfile .
-                        '''
-                    }
-                }
+                bat '''
+                echo "Listing djproject directory"
+                dir djproject
+
+                echo "Building Docker image"
+                docker build -t sachinkumar26/djproject:1.0 -f djproject\\Dockerfile djproject
+                '''
             }
         }
-
         stage('Run Unit Tests') {
             steps {
                 script {
                     if (isUnix()) {
                         sh '''
-                        docker run --rm $DOCKER_IMAGE python manage.py test || true
+                        docker run --rm sachinkumar26/djproject:1.0 python manage.py test || true
                         '''
                     } else {
                         bat '''
