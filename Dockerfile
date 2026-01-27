@@ -6,12 +6,11 @@ ENV PYTHONUNBUFFERED=1
 WORKDIR /app
 
 COPY requirements.txt /app/
-COPY manage.py /app/
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . /app/
 
-# ✅ FIX: move into directory that contains manage.py
+# 🔥 THIS LINE FIXES YOUR ERROR
 WORKDIR /app/djproject
 
 EXPOSE 8000
