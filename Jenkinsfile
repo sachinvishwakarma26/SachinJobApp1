@@ -2,7 +2,7 @@ pipeline {
     agent {
         docker {
             // Use a specific Docker image for the Jenkins agent
-            image 'python:3.9-slim'
+            image 'python:3.8'
             args '-u root' // Run as root user to avoid permission issues
         }
     }
