@@ -1,0 +1,67 @@
+stages:
+  - build
+  - test
+  - push
+  - deploy
+
+variables:
+  DOCKER_IMAGE: sachinkumar26/djproject:1.0
+  DOCKER_REGISTRY: docker.io
+  DOCKER_TLS_CERTDIR: ""
+
+image: docker:24
+
+services:
+  - docker:24-dind
+
+before_script:
+  - docker info
+
+# ------------------------
+# BUILD DOCKER IMAGE
+# ------------------------
+build_image:
+  stage: build
+  script:
+    - echo "Building Docker image"
+    - docker build --no-cache -t $DOCKER_IMAGE -f djproject/Dockerfile .
+  only:
+    - master
+
+# ------------------------
+# RUN UNIT TESTS
+# ------------------------
+unit_tests:
+  stage: test
+  script:
+    - echo "Running Django unit tests"
+    - docker run --rm $DOCKER_IMAGE python manage.py test || true
+  only:
+    - master
+
+# ------------------------
+# PUSH IMAGE TO DOCKER HUB
+# ------------------------
+push_image:
+  stage: push
+  script:
+    - echo "Logging in to Docker Hub"
+    - docker login -u "$DOCKER_USERNAME" -p "$DOCKER_PASSWORD" $DOCKER_REGISTRY
+    - docker push $DOCKER_IMAGE
+  only:
+    - master
+
+# ------------------------
+# DEPLOY CONTAINER
+# ------------------------
+deploy:
+  stage: deploy
+  script:
+    - echo "Deploying container"
+    - docker rm -f djproject || true
+    - docker run -d --name djproject -p 8000:8000 $DOCKER_IMAGE
+  environment:
+    name: production
+  when: manual
+  only:
+    - master
