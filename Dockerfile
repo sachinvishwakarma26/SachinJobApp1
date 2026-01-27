@@ -1,3 +1,22 @@
+FROM python:3.8-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+COPY requirements.txt /app/
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY . /app/
+
+# ✅ FIX: move into directory that contains manage.py
+WORKDIR /app/djproject
+
+EXPOSE 8000
+
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+
 # # Use a lightweight base image
 # FROM python:3.8-alpine
 
@@ -42,25 +61,25 @@
 # CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
 
 # base image
-FROM python:3.8-slim
+# FROM python:3.8-slim
 
-# set working dir
-WORKDIR /usr/src/app
+# # set working dir
+# WORKDIR /usr/src/app
 
-# copy requirements file first
-COPY requirements.txt .
+# # copy requirements file first
+# COPY requirements.txt .
 
-# install dependencies
-RUN pip install --no-cache-dir -r requirements.txt
+# # install dependencies
+# RUN pip install --no-cache-dir -r requirements.txt
 
-# copy all source code
-COPY . .
+# # copy all source code
+# COPY . .
 
-# set django settings env
-ENV DJANGO_SETTINGS_MODULE=djproject.settings
+# # set django settings env
+# ENV DJANGO_SETTINGS_MODULE=djproject.settings
 
-# expose port (example)
-EXPOSE 8000
+# # expose port (example)
+# EXPOSE 8000
 
-# run server
-CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
+# # run server
+# CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
