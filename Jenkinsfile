@@ -36,7 +36,7 @@ pipeline {
                 script {
                     if (isUnix()) {
                         sh '''
-                        docker run --rm sachinkumar26/djproject:1.0 python manage.py test || true
+                        docker run --rm -w /app/djproject sachinkumar26/djproject:1.0 python manage.py test || true
                         '''
                     } else {
                         bat '''
