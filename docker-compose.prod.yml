@@ -1,0 +1,97 @@
+version: '3.9'
+
+services:
+  # PostgreSQL Database Service
+  db:
+    image: postgres:13-alpine
+    container_name: djproject-db-prod
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-djproject_db}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8"
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data_prod:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - djproject-network-prod
+    restart: always
+
+  # Django Web Application Service
+  web:
+    image: ${DOCKER_IMAGE:-sachinkumar26/djproject:latest}
+    container_name: djproject-web-prod
+    environment:
+      DEBUG: ${DEBUG:-False}
+      ALLOWED_HOSTS: ${ALLOWED_HOSTS}
+      DATABASE_URL: postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD}@db:5432/${POSTGRES_DB:-djproject_db}
+      PYTHONUNBUFFERED: 1
+      DJANGO_SETTINGS_MODULE: djproject.settings
+      SECRET_KEY: ${SECRET_KEY}
+    ports:
+      - "8000:8000"
+    volumes:
+      - static_volume_prod:/app/staticfiles
+      - media_volume_prod:/app/media
+    depends_on:
+      db:
+        condition: service_healthy
+    networks:
+      - djproject-network-prod
+    restart: always
+
+  # Redis Cache Service (Production)
+  redis:
+    image: redis:7-alpine
+    container_name: djproject-redis-prod
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-redis123}
+    volumes:
+      - redis_data_prod:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "--raw", "incr", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - djproject-network-prod
+    restart: always
+
+  # Nginx Reverse Proxy (Production)
+  nginx:
+    image: nginx:alpine
+    container_name: djproject-nginx-prod
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./ssl:/etc/nginx/ssl:ro
+      - static_volume_prod:/app/staticfiles:ro
+      - media_volume_prod:/app/media:ro
+    depends_on:
+      - web
+    networks:
+      - djproject-network-prod
+    restart: always
+
+volumes:
+  postgres_data_prod:
+    driver: local
+  redis_data_prod:
+    driver: local
+  static_volume_prod:
+    driver: local
+  media_volume_prod:
+    driver: local
+
+networks:
+  djproject-network-prod:
+    driver: bridge
