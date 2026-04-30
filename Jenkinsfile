@@ -196,9 +196,6 @@ pipeline {
         }
 
         stage('🧹 Cleanup') {
-            when {
-                always()
-            }
             steps {
                 script {
                     sh '''
