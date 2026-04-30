@@ -45,10 +45,17 @@ pipeline {
             steps {
                 script {
                     echo "Installing Python dependencies..."
-                    sh '''
-                        python3 -m pip install --upgrade pip
-                        pip install -r djproject/requirements.txt
-                    '''
+                    if (isUnix()) {
+                        sh '''
+                            python3 -m pip install --upgrade pip
+                            pip install -r djproject/requirements.txt
+                        '''
+                    } else {
+                        powershell '''
+                            python -m pip install --upgrade pip
+                            pip install -r djproject/requirements.txt
+                        '''
+                    }
                 }
             }
         }
@@ -57,11 +64,19 @@ pipeline {
             steps {
                 script {
                     echo "Running Django unit tests..."
-                    sh '''
-                        cd djproject
-                        python manage.py test testapp myapi --verbosity=2 || true
-                        echo "Test stage completed"
-                    '''
+                    if (isUnix()) {
+                        sh '''
+                            cd djproject
+                            python manage.py test testapp myapi --verbosity=2 || true
+                            echo "Test stage completed"
+                        '''
+                    } else {
+                        powershell '''
+                            cd djproject
+                            python manage.py test testapp myapi --verbosity=2; $null
+                            Write-Host "Test stage completed"
+                        '''
+                    }
                 }
             }
             post {
@@ -75,18 +90,33 @@ pipeline {
             steps {
                 script {
                     echo "Running code quality checks with flake8, black, and isort..."
-                    sh '''
-                        pip install --upgrade flake8 black isort pylint -q
-                        
-                        echo "Checking code style with flake8..."
-                        flake8 djproject/testapp djproject/myapi --max-line-length=120 --statistics --format=pylint || true
-                        
-                        echo "Checking format with black..."
-                        black --check djproject/testapp djproject/myapi || true
-                        
-                        echo "Checking import order with isort..."
-                        isort --check-only djproject/testapp djproject/myapi || true
-                    '''
+                    if (isUnix()) {
+                        sh '''
+                            pip install --upgrade flake8 black isort pylint -q
+                            
+                            echo "Checking code style with flake8..."
+                            flake8 djproject/testapp djproject/myapi --max-line-length=120 --statistics --format=pylint || true
+                            
+                            echo "Checking format with black..."
+                            black --check djproject/testapp djproject/myapi || true
+                            
+                            echo "Checking import order with isort..."
+                            isort --check-only djproject/testapp djproject/myapi || true
+                        '''
+                    } else {
+                        powershell '''
+                            pip install --upgrade flake8 black isort pylint -q
+                            
+                            Write-Host "Checking code style with flake8..."
+                            flake8 djproject/testapp djproject/myapi --max-line-length=120 --statistics --format=pylint; $null
+                            
+                            Write-Host "Checking format with black..."
+                            black --check djproject/testapp djproject/myapi; $null
+                            
+                            Write-Host "Checking import order with isort..."
+                            isort --check-only djproject/testapp djproject/myapi; $null
+                        '''
+                    }
                 }
             }
             post {
@@ -100,15 +130,27 @@ pipeline {
             steps {
                 script {
                     echo "Building Docker image: ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}"
-                    sh '''
-                        docker build \
-                            --no-cache \
-                            -t ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG} \
-                            -t ${DOCKER_IMAGE_NAME}:latest \
-                            -f Dockerfile .
-                        echo "Docker image built successfully"
-                        docker images | grep djproject
-                    '''
+                    if (isUnix()) {
+                        sh '''
+                            docker build \
+                                --no-cache \
+                                -t ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG} \
+                                -t ${DOCKER_IMAGE_NAME}:latest \
+                                -f Dockerfile .
+                            echo "Docker image built successfully"
+                            docker images | grep djproject
+                        '''
+                    } else {
+                        powershell '''
+                            docker build `
+                                --no-cache `
+                                -t ${env:DOCKER_IMAGE_NAME}:${env:DOCKER_IMAGE_TAG} `
+                                -t ${env:DOCKER_IMAGE_NAME}:latest `
+                                -f Dockerfile .
+                            Write-Host "Docker image built successfully"
+                            docker images | Select-String djproject
+                        '''
+                    }
                 }
             }
         }
@@ -117,10 +159,17 @@ pipeline {
             steps {
                 script {
                     echo "Validating Docker image..."
-                    sh '''
-                        docker run --rm ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG} python --version
-                        echo "Docker image validation successful"
-                    '''
+                    if (isUnix()) {
+                        sh '''
+                            docker run --rm ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG} python --version
+                            echo "Docker image validation successful"
+                        '''
+                    } else {
+                        powershell '''
+                            docker run --rm ${env:DOCKER_IMAGE_NAME}:${env:DOCKER_IMAGE_TAG} python --version
+                            Write-Host "Docker image validation successful"
+                        '''
+                    }
                 }
             }
         }
@@ -132,13 +181,25 @@ pipeline {
             steps {
                 script {
                     echo "Pushing Docker image to Docker Hub..."
-                    sh '''
-                        echo $DOCKER_CREDENTIALS_PSW | docker login -u $DOCKER_CREDENTIALS_USR --password-stdin ${DOCKER_REGISTRY}
-                        docker push ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}
-                        docker push ${DOCKER_IMAGE_NAME}:latest
-                        docker logout ${DOCKER_REGISTRY}
-                        echo "Docker image pushed successfully"
-                    '''
+                    if (isUnix()) {
+                        sh '''
+                            echo $DOCKER_CREDENTIALS_PSW | docker login -u $DOCKER_CREDENTIALS_USR --password-stdin ${DOCKER_REGISTRY}
+                            docker push ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}
+                            docker push ${DOCKER_IMAGE_NAME}:latest
+                            docker logout ${DOCKER_REGISTRY}
+                            echo "Docker image pushed successfully"
+                        '''
+                    } else {
+                        powershell '''
+                            $password = ${env:DOCKER_CREDENTIALS_PSW} | ConvertTo-SecureString -AsPlainText -Force
+                            $credential = New-Object System.Management.Automation.PSCredential(${env:DOCKER_CREDENTIALS_USR}, $password)
+                            echo ${env:DOCKER_CREDENTIALS_PSW} | docker login -u ${env:DOCKER_CREDENTIALS_USR} --password-stdin ${env:DOCKER_REGISTRY}
+                            docker push ${env:DOCKER_IMAGE_NAME}:${env:DOCKER_IMAGE_TAG}
+                            docker push ${env:DOCKER_IMAGE_NAME}:latest
+                            docker logout ${env:DOCKER_REGISTRY}
+                            Write-Host "Docker image pushed successfully"
+                        '''
+                    }
                 }
             }
         }
@@ -150,26 +211,49 @@ pipeline {
             steps {
                 script {
                     echo "Deploying to Development environment..."
-                    sh '''
-                        echo "Stopping existing container (if running)..."
-                        docker rm -f djproject-dev || true
-                        
-                        echo "Starting new container..."
-                        docker run -d \
-                            --name djproject-dev \
-                            -p 8001:8000 \
-                            -e DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE} \
-                            -e DEBUG=True \
-                            ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}
-                        
-                        echo "Waiting for application to start..."
-                        sleep 5
-                        
-                        echo "Container logs:"
-                        docker logs djproject-dev || true
-                        
-                        echo "Development deployment completed"
-                    '''
+                    if (isUnix()) {
+                        sh '''
+                            echo "Stopping existing container (if running)..."
+                            docker rm -f djproject-dev || true
+                            
+                            echo "Starting new container..."
+                            docker run -d \
+                                --name djproject-dev \
+                                -p 8001:8000 \
+                                -e DJANGO_SETTINGS_MODULE=${DJANGO_SETTINGS_MODULE} \
+                                -e DEBUG=True \
+                                ${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG}
+                            
+                            echo "Waiting for application to start..."
+                            sleep 5
+                            
+                            echo "Container logs:"
+                            docker logs djproject-dev || true
+                            
+                            echo "Development deployment completed"
+                        '''
+                    } else {
+                        powershell '''
+                            Write-Host "Stopping existing container (if running)..."
+                            docker rm -f djproject-dev; $null
+                            
+                            Write-Host "Starting new container..."
+                            docker run -d `
+                                --name djproject-dev `
+                                -p 8001:8000 `
+                                -e DJANGO_SETTINGS_MODULE=${env:DJANGO_SETTINGS_MODULE} `
+                                -e DEBUG=True `
+                                ${env:DOCKER_IMAGE_NAME}:${env:DOCKER_IMAGE_TAG}
+                            
+                            Write-Host "Waiting for application to start..."
+                            Start-Sleep -Seconds 5
+                            
+                            Write-Host "Container logs:"
+                            docker logs djproject-dev; $null
+                            
+                            Write-Host "Development deployment completed"
+                        '''
+                    }
                 }
             }
         }
@@ -181,16 +265,29 @@ pipeline {
             steps {
                 script {
                     echo "Kubernetes deployment..."
-                    sh '''
-                        if command -v kubectl &> /dev/null; then
-                            echo "Updating Kubernetes deployment with new image..."
-                            kubectl set image deployment/django-app \
-                                django-app=${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG} \
-                                -n default --record || echo "Kubernetes deployment not configured or not available"
-                        else
-                            echo "kubectl not found. Skipping Kubernetes deployment"
-                        fi
-                    '''
+                    if (isUnix()) {
+                        sh '''
+                            if command -v kubectl &> /dev/null; then
+                                echo "Updating Kubernetes deployment with new image..."
+                                kubectl set image deployment/django-app \
+                                    django-app=${DOCKER_IMAGE_NAME}:${DOCKER_IMAGE_TAG} \
+                                    -n default --record || echo "Kubernetes deployment not configured or not available"
+                            else
+                                echo "kubectl not found. Skipping Kubernetes deployment"
+                            fi
+                        '''
+                    } else {
+                        powershell '''
+                            if (Get-Command kubectl -ErrorAction SilentlyContinue) {
+                                Write-Host "Updating Kubernetes deployment with new image..."
+                                kubectl set image deployment/django-app `
+                                    django-app=${env:DOCKER_IMAGE_NAME}:${env:DOCKER_IMAGE_TAG} `
+                                    -n default --record
+                            } else {
+                                Write-Host "kubectl not found. Skipping Kubernetes deployment"
+                            }
+                        '''
+                    }
                 }
             }
         }
@@ -198,12 +295,32 @@ pipeline {
         stage('🧹 Cleanup') {
             steps {
                 script {
-                    sh '''
-                        echo "Cleaning up dangling Docker images..."
-                        docker image prune -f || true
-                        
-                        echo "Pipeline cleanup completed"
-                    '''
+                    if (isUnix()) {
+                        sh '''
+                            echo "Cleaning up dangling Docker images..."
+                            docker image prune -f || true
+                            
+                            echo "Pipeline cleanup completed"
+                        '''
+                    } else {
+                        powershell '''
+                            Write-Host "Cleaning up dangling Docker images..."
+                            docker image prune -f; $null
+                            
+                            Write-Host "Pipeline cleanup completed"
+                        '''
+                    }
+                }
+            }
+            post {
+                always {
+                    cleanWs(
+                        deleteDirs: true,
+                        patterns: [
+                            [pattern: '**/test-results*.xml', type: 'INCLUDE'],
+                            [pattern: '**/coverage/**', type: 'INCLUDE']
+                        ]
+                    )
                 }
             }
         }
@@ -218,13 +335,6 @@ pipeline {
         }
         always {
             echo "========== Pipeline Finished =========="
-            cleanWs(
-                deleteDirs: true,
-                patterns: [
-                    [pattern: '**/test-results*.xml', type: 'INCLUDE'],
-                    [pattern: '**/coverage/**', type: 'INCLUDE']
-                ]
-            )
         }
     }
 }
