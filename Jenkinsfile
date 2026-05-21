@@ -52,8 +52,9 @@ pipeline {
                         '''
                     } else {
                         bat '''
-                            python -m pip install --upgrade pip
-                            pip install -r djproject/requirements.txt
+                            REM Update with your Python installation path. Example: C:\\Python38\\python.exe
+                            C:\\Python38\\python.exe -m pip install --upgrade pip
+                            C:\\Python38\\Scripts\\pip.exe install -r djproject/requirements.txt
                         '''
                     }
                 }
@@ -73,7 +74,8 @@ pipeline {
                     } else {
                         bat '''
                             cd djproject
-                            python manage.py test testapp myapi --verbosity=2
+                            REM Update with your Python installation path
+                            C:\\Python38\\python.exe manage.py test testapp myapi --verbosity=2
                             echo Test stage completed
                         '''
                     }
@@ -105,16 +107,17 @@ pipeline {
                         '''
                     } else {
                         bat '''
-                            pip install --upgrade flake8 black isort pylint -q
+                            REM Update with your Python installation path
+                            C:\\Python38\\Scripts\\pip.exe install --upgrade flake8 black isort pylint -q
                             
                             echo Checking code style with flake8...
-                            flake8 djproject/testapp djproject/myapi --max-line-length=120 --statistics --format=pylint
+                            C:\\Python38\\Scripts\\flake8.exe djproject/testapp djproject/myapi --max-line-length=120 --statistics --format=pylint
                             
                             echo Checking format with black...
-                            black --check djproject/testapp djproject/myapi
+                            C:\\Python38\\Scripts\\black.exe --check djproject/testapp djproject/myapi
                             
                             echo Checking import order with isort...
-                            isort --check-only djproject/testapp djproject/myapi
+                            C:\\Python38\\Scripts\\isort.exe --check-only djproject/testapp djproject/myapi
                         '''
                     }
                 }
