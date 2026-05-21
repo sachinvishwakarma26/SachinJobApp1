@@ -52,8 +52,8 @@ pipeline {
                         '''
                     } else {
                         bat '''
-                            C:\Users\techs\AppData\Local\Programs\Python\Python313\python.exe -m pip install --upgrade pip
-                            C:\Users\techs\AppData\Local\Programs\Python\Python313\Scripts\pip.exe install -r djproject/requirements.txt
+                            C:\\Users\\techs\\AppData\\Local\\Programs\\Python\\Python313\\python.exe -m pip install --upgrade pip
+                            C:\\Users\\techs\\AppData\\Local\\Programs\\Python\\Python313\\Scripts\\pip.exe install -r djproject/requirements.txt
                         '''
                     }
                 }
@@ -73,7 +73,7 @@ pipeline {
                     } else {
                         bat '''
                             cd djproject
-                            C:\Users\techs\AppData\Local\Programs\Python\Python313\python.exe manage.py test testapp myapi --verbosity=2
+                            C:\\Users\\techs\\AppData\\Local\\Programs\\Python\\Python313\\python.exe manage.py test testapp myapi --verbosity=2
                             echo Test stage completed
                         '''
                     }
@@ -105,16 +105,16 @@ pipeline {
                         '''
                     } else {
                         bat '''
-                            C:\Users\techs\AppData\Local\Programs\Python\Python313\Scripts\pip.exe install --upgrade flake8 black isort pylint -q
+                            C:\\Users\\techs\\AppData\\Local\\Programs\\Python\\Python313\\Scripts\\pip.exe install --upgrade flake8 black isort pylint -q
                             
                             echo Checking code style with flake8...
-                            C:\Users\techs\AppData\Local\Programs\Python\Python313\Scripts\flake8.exe djproject/testapp djproject/myapi --max-line-length=120 --statistics --format=pylint
+                            C:\\Users\\techs\\AppData\\Local\\Programs\\Python\\Python313\\Scripts\\flake8.exe djproject/testapp djproject/myapi --max-line-length=120 --statistics --format=pylint
                             
                             echo Checking format with black...
-                            C:\Users\techs\AppData\Local\Programs\Python\Python313\Scripts\black.exe --check djproject/testapp djproject/myapi
+                            C:\\Users\\techs\\AppData\\Local\\Programs\\Python\\Python313\\Scripts\\black.exe --check djproject/testapp djproject/myapi
                             
                             echo Checking import order with isort...
-                            C:\Users\techs\AppData\Local\Programs\Python\Python313\Scripts\isort.exe --check-only djproject/testapp djproject/myapi
+                            C:\\Users\\techs\\AppData\\Local\\Programs\\Python\\Python313\\Scripts\\isort.exe --check-only djproject/testapp djproject/myapi
                         '''
                     }
                 }
