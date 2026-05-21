@@ -2,9 +2,6 @@
 django-rest==0.8.7
 django-restframework==0.0.1  # Consider removing
 djangorestframework==3.15.1
-
-
-
 # asgiref==3.7.2
 # pytest==8.3.5
 # awscli==1.40.45
