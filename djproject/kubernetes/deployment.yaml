@@ -12,7 +12,7 @@ metadata:
 
 spec:
   # Number of replicas
-  replicas: 5
+  replicas: 3
 
   # Deployment strategy
   strategy:
