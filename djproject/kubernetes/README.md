@@ -1,122 +1,162 @@
-# Kubernetes Deployment Fixes
+# Kubernetes Deployment - Job App
 
-## Issues Found and Fixed
+## Deployment Overview
 
-### 1. **Service Name Mismatch** ✅ FIXED
-- **Problem**: Ingress was referencing service name `django-jobapp-service` but actual service was `django-job-app`
-- **Fix**: Updated [ingress.yaml](ingress.yaml#L15) to use correct service name `django-job-app`
+This directory contains Kubernetes manifests for deploying the Job App application.
 
-### 2. **Non-existent Health Check Endpoint** ✅ FIXED
-- **Problem**: Probes were using `/health/` endpoint which Django doesn't provide by default
-- **Fix**: Changed all probes (readiness, liveness, startup) from HTTP to TCP probes
-- **Note**: If you want HTTP health checks, implement a `/health/` endpoint in your Django app
+### Files
 
-### 3. **Missing ConfigMap** ✅ FIXED
-- **File Created**: [configmap.yaml](configmap.yaml)
-- **Contains**: `ALLOWED_HOSTS` and `LOG_LEVEL` configuration
-- **Deploy**: `kubectl apply -f kubernetes/configmap.yaml`
+- **deployment.yaml** - Main application deployment (2 replicas)
+- **service.yaml** - ClusterIP and NodePort services
+- **ingress.yaml** - Nginx ingress configuration
+- **configmap.yaml** - Application configuration
+- **secret.yaml** - Sensitive data (database, Redis, secret key)
+- **serviceaccount.yaml** - RBAC configuration
 
-### 4. **Missing Secret** ✅ FIXED
-- **File Created**: [secret.yaml](secret.yaml)
-- **⚠️ ACTION REQUIRED**: Update these values in secret.yaml before deploying:
-  - `database-url`: PostgreSQL connection string
-  - `redis-url`: Redis connection URL
-  - `secret-key`: Generate a random Django secret key
-
-### 5. **Missing ServiceAccount & RBAC** ✅ FIXED
-- **File Created**: [serviceaccount.yaml](serviceaccount.yaml)
-- **Contains**: ServiceAccount, Role, and RoleBinding resources
-- **Deploy**: `kubectl apply -f kubernetes/serviceaccount.yaml`
-
-## Deployment Instructions
+## Quick Deploy
 
 ### Step 1: Update Secrets
-Edit `kubernetes/secret.yaml` and set your actual database and Redis connection strings:
-
-```bash
-# Generate a random secret key (example)
-python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
+Edit `secret.yaml` and set your actual values:
+```yaml
+database-url: "postgresql://user:password@host:5432/dbname"
+redis-url: "redis://redis-host:6379/0"
+secret-key: "generate-random-key"
 ```
 
-### Step 2: Create Prerequisites
+Generate a random secret key:
 ```bash
-# Create ConfigMap, Secret, and ServiceAccount
+python -c "import secrets; print(secrets.token_urlsafe(50))"
+```
+
+### Step 2: Deploy
+```bash
+# Create all resources
+kubectl apply -f kubernetes/
+
+# Or deploy individually:
 kubectl apply -f kubernetes/configmap.yaml
 kubectl apply -f kubernetes/secret.yaml
 kubectl apply -f kubernetes/serviceaccount.yaml
-```
-
-### Step 3: Deploy Application
-```bash
-# Deploy the main application
 kubectl apply -f kubernetes/deployment.yaml
 kubectl apply -f kubernetes/service.yaml
 kubectl apply -f kubernetes/ingress.yaml
 ```
 
-### Step 4: Verify Deployment
+### Step 3: Verify
 ```bash
-# Check deployment status
-kubectl get deployments -n default
-kubectl get pods -n default
-kubectl get services -n default
+# Check deployments
+kubectl get deployment -l app=jobapp
 
-# Check for errors
-kubectl describe deployment django-job-app
-kubectl logs -n default -l app=django-job-app --tail=100
+# Check pods
+kubectl get pods -l app=jobapp
+
+# Check services
+kubectl get svc -l app=jobapp
+
+# Check ingress
+kubectl get ingress
 ```
 
-### Step 5: Access the Application
+### Step 4: Access the Application
+
+**Port Forward (local access):**
 ```bash
-# For ClusterIP service (internal access)
-kubectl port-forward svc/django-job-app 8000:80
-
-# For NodePort service (on port 30007)
-curl http://<node-ip>:30007
-
-# For Ingress (depends on ingress controller setup)
-curl http://<ingress-host>/
+kubectl port-forward svc/jobapp-service 8000:80
+# Access: http://localhost:8000
 ```
+
+**NodePort Service (any node):**
+```bash
+# Get a node IP
+kubectl get nodes -o wide
+
+# Access: http://<node-ip>:30007
+```
+
+**Ingress (requires nginx-ingress controller):**
+```bash
+# Access: http://localhost/ (depends on your ingress setup)
+```
+
+## Configuration
+
+### Environment Variables
+Modify `configmap.yaml` and `secret.yaml` before deployment:
+
+**ConfigMap (non-sensitive):**
+- `allowed-hosts`: Allowed hostnames for Django
+
+**Secret (sensitive):**
+- `database-url`: PostgreSQL connection string
+- `redis-url`: Redis connection string
+- `secret-key`: Django SECRET_KEY
 
 ## Troubleshooting
 
-### Pods stuck in Pending
-- Check ConfigMap/Secret existence: `kubectl get configmap,secret -n default`
-- Check ServiceAccount: `kubectl get serviceaccount -n default`
+### Pods not starting
+```bash
+# Check pod events
+kubectl describe pod <pod-name> -l app=jobapp
+
+# Check logs
+kubectl logs -l app=jobapp
+```
 
 ### ImagePullBackOff
-- Verify Docker image exists: `sachinkumar26/djproject:latest`
-- Check image repository credentials if private
+```bash
+# Verify image exists
+docker pull sachinkumar26/sapiensjobapp:2.0
 
-### CrashLoopBackOff
-- Check logs: `kubectl logs <pod-name> -n default`
-- Verify DATABASE_URL and REDIS_URL in secret.yaml are correct
-- Check if database/redis services are accessible
+# Check imagePullPolicy in deployment.yaml
+```
 
-### Probes Failing (not using health checks)
-- Current TCP probes check port 8000 connectivity
-- If pods fail startup, increase `failureThreshold` values
-- Monitor logs for startup issues
+### Service not reachable
+```bash
+# Test connectivity
+kubectl exec -it <pod-name> -- wget -O- http://localhost:8000
 
-## File Checklist
-- [x] deployment.yaml - Fixed health probes
-- [x] service.yaml - No changes needed
-- [x] ingress.yaml - Fixed service name reference
-- [x] configmap.yaml - Created
-- [x] secret.yaml - Created (requires configuration)
-- [x] serviceaccount.yaml - Created
+# Check service endpoints
+kubectl get endpoints
+```
 
-## Next Steps
+## Scaling
 
-1. **Configure Django for production**:
-   - Set `DEBUG=False` in deployment (already set)
-   - Configure proper ALLOWED_HOSTS in ConfigMap
-   - Setup static file serving (using static volume)
+### Scale replicas
+```bash
+kubectl scale deployment djproject --replicas=4
+```
 
-2. **Add health endpoint** (optional but recommended):
-   - Create a `/health/` view in Django
-   - Update probes to use HTTP again for better diagnostics
+### Update image
+```bash
+kubectl set image deployment/djproject jobapp=sachinkumar26/sapiensjobapp:2.1 --record
+```
 
-3. **Setup persistent storage** (if needed):
-   - Replace emptyDir volumes with PersistentVolumeClaim for production
-   - Configure database backups
+## Rollback
+
+```bash
+# View rollout history
+kubectl rollout history deployment/djproject
+
+# Rollback to previous version
+kubectl rollout undo deployment/djproject
+```
+
+## Cleanup
+
+```bash
+# Delete all resources
+kubectl delete -f kubernetes/
+
+# Or delete specific resource
+kubectl delete deployment djproject
+```
+
+## Application Info
+
+- **App Label**: `app=jobapp`
+- **Deployment Name**: `djproject`
+- **Image**: `sachinkumar26/sapiensjobapp:2.0`
+- **Port**: 8000
+- **Replicas**: 2
+- **ClusterIP Port**: 80 (maps to 8000)
+- **NodePort**: 30007
