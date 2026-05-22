@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: djproject
+  name: djproject-sachin
 spec:
   selector:
     matchLabels:
@@ -14,6 +14,6 @@ spec:
     spec:
       containers:
       - name: jobapp
-        image: sachinkumar26/sapiensjobapp:2.0
+        image: sachinkumar26/djproject:latest
         ports:
         - containerPort: 8000

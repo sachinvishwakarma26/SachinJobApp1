@@ -2,14 +2,17 @@ apiVersion: v1
 kind: Service
 metadata:
   name: jobapp-service
+  namespace: default
   labels:
     app: jobapp
+    name: jobapp-service
 spec:
   type: ClusterIP
   selector:
     app: jobapp
   ports:
-    - protocol: TCP
+    - name: http
+      protocol: TCP
       port: 80
       targetPort: 8000
 
@@ -18,15 +21,18 @@ apiVersion: v1
 kind: Service
 metadata:
   name: jobapp-nodeport
+  namespace: default
   labels:
     app: jobapp
+    name: jobapp-nodeport
     tier: nodeport
 spec:
   type: NodePort
   selector:
     app: jobapp
   ports:
-    - protocol: TCP
+    - name: http
+      protocol: TCP
       port: 80
       targetPort: 8000
       nodePort: 30007
