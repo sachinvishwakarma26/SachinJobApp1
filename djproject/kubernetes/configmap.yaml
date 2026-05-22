@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: django-config
+  namespace: default
+  labels:
+    app: django-job-app
+data:
+  allowed-hosts: "localhost,127.0.0.1,django-job-app,django-job-app.default,django-job-app.default.svc.cluster.local"
+  log-level: "INFO"

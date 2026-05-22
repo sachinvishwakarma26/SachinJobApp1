@@ -142,8 +142,7 @@ spec:
 
           # Readiness probe
           readinessProbe:
-            httpGet:
-              path: /health/
+            tcpSocket:
               port: http
             initialDelaySeconds: 30
             periodSeconds: 10
@@ -153,8 +152,7 @@ spec:
 
           # Liveness probe
           livenessProbe:
-            httpGet:
-              path: /health/
+            tcpSocket:
               port: http
             initialDelaySeconds: 60
             periodSeconds: 20
@@ -163,8 +161,7 @@ spec:
 
           # Startup probe (for slower apps)
           startupProbe:
-            httpGet:
-              path: /health/
+            tcpSocket:
               port: http
             initialDelaySeconds: 10
             periodSeconds: 10
