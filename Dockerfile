@@ -58,8 +58,8 @@ COPY --from=builder /build/requirements.txt .
 RUN pip install --no-cache-dir --no-index --find-links=/wheels -r requirements.txt && \
     rm -rf /wheels
 
-# Copy application code
-COPY --chown=django:django djproject/ /app/
+# Copy application code (copy everything from djproject directory to /app)
+COPY --chown=django:django . /app/
 
 # Create necessary directories
 RUN mkdir -p /app/staticfiles /app/media && \
