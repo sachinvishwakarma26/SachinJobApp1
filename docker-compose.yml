@@ -21,12 +21,13 @@ services:
       retries: 5
     networks:
       - djproject-network
+    restart: unless-stopped
 
   # Django Web Application Service
   web:
     build:
       context: .
-      dockerfile: djproject/Dockerfile
+      dockerfile: Dockerfile
     container_name: djproject-web
     command: >
       sh -c "python manage.py migrate &&
@@ -50,6 +51,14 @@ services:
     networks:
       - djproject-network
     restart: unless-stopped
+    develop:
+      watch:
+        - path: ./djproject
+          action: sync
+        - path: ./requirements.txt
+          action: rebuild
+        - path: ./manage.py
+          action: sync
 
   # Redis Cache Service (Optional)
   redis:
@@ -68,7 +77,7 @@ services:
       - djproject-network
     restart: unless-stopped
 
-  # Nginx Reverse Proxy (Optional)
+  # Nginx Reverse Proxy
   nginx:
     image: nginx:alpine
     container_name: djproject-nginx
