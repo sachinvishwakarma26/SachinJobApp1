@@ -24,10 +24,10 @@ pipeline {
                 script {
                     if (isUnix()) {
                         // Build Docker image for Unix-based systems
-                        sh 'docker build -t $DOCKER_IMAGE -f djproject/Dockerfile .'
+                        sh 'docker build -t $DOCKER_IMAGE --no-cache .'
                     } else {
                         // Build Docker image for Windows systems
-                        bat 'docker build -t %DOCKER_IMAGE% -f djproject/Dockerfile .'
+                        bat 'docker build -t %DOCKER_IMAGE% --no-cache .'
                     }
                 }
             }
@@ -49,15 +49,17 @@ pipeline {
             }
         }
 
-        stage('Deploy') {
+        stage('Deploy to Kubernetes') {
             steps {
                 script {
                     if (isUnix()) {
-                        // Run Docker container for Linux
-                        sh 'docker run -d -p 8000:8000 $DOCKER_IMAGE'
+                        // Deploy to Kubernetes on Linux
+                        sh 'kubectl rollout restart deployment djproject-sachin'
+                        sh 'kubectl rollout status deployment/djproject-sachin --timeout=5m'
                     } else {
-                        // Run Docker container for Windows
-                        bat 'start /b docker run -d -p 8000:8000 %DOCKER_IMAGE%'
+                        // Deploy to Kubernetes on Windows
+                        bat 'kubectl rollout restart deployment djproject-sachin'
+                        bat 'kubectl rollout status deployment/djproject-sachin --timeout=5m'
                     }
                 }
             }
