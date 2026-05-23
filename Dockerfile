@@ -61,8 +61,11 @@ RUN pip install --no-cache-dir --no-index --find-links=/wheels -r requirements.t
 COPY --chown=django:django . /app/
 
 # Create and own necessary directories
-RUN mkdir -p /app/staticfiles /app/media && \
+RUN mkdir -p /app/djproject/staticfiles /app/djproject/media && \
     chown -R django:django /app
+
+# Set working directory to Django project root (where manage.py is)
+WORKDIR /app/djproject
 
 # Switch to non-root user
 USER django
@@ -72,6 +75,17 @@ EXPOSE 8000
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:8000/health/ || exit 1
+
+# Run Gunicorn for production
+CMD ["gunicorn", \
+     "--bind", "0.0.0.0:8000", \
+     "--workers", "4", \
+     "--worker-class", "sync", \
+     "--worker-tmp-dir", "/dev/shm", \
+     "--timeout", "60", \
+     "--access-logfile", "-", \
+     "--error-logfile", "-", \
+     "djproject.wsgi:application"]
 
 # Run Gunicorn for production
 CMD ["gunicorn", \
