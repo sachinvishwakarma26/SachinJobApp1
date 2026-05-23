@@ -21,6 +21,7 @@ from testapp import views
 
 urlpatterns = [
     re_path(r'^admin/', admin.site.urls),
+    re_path(r'^health/$', views.health_check),
     re_path(r'^$', views.index),
     re_path(r'^hydjobs/', views.hydjobs1),
     re_path(r'^blorejobs/', views.blorejobs1),

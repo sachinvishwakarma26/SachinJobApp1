@@ -72,9 +72,9 @@ USER django
 
 EXPOSE 8000
 
-# Health check
+# Health check - just verify port is listening
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:8000/health/ || exit 1
+    CMD curl -f http://localhost:8000/ || exit 1
 
 # Run Gunicorn for production
 CMD ["gunicorn", \
