@@ -65,6 +65,9 @@ COPY --chown=django:django . /app/
 RUN mkdir -p /app/djproject/staticfiles /app/djproject/media && \
     chown -R django:django /app
 
+# Collect static files (as root, before switching to django user)
+RUN cd /app/djproject && python manage.py collectstatic --noinput --clear
+
 # Set working directory to Django project root (where manage.py is)
 WORKDIR /app/djproject
 
