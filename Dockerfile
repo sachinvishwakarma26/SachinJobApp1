@@ -35,6 +35,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PYTHONPATH=/app/djproject \
     DJANGO_SETTINGS_MODULE=djproject.settings
 
 # Install runtime dependencies only
@@ -75,17 +76,6 @@ EXPOSE 8000
 # Health check - just verify port is listening
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
     CMD curl -f http://localhost:8000/ || exit 1
-
-# Run Gunicorn for production
-CMD ["gunicorn", \
-     "--bind", "0.0.0.0:8000", \
-     "--workers", "4", \
-     "--worker-class", "sync", \
-     "--worker-tmp-dir", "/dev/shm", \
-     "--timeout", "60", \
-     "--access-logfile", "-", \
-     "--error-logfile", "-", \
-     "djproject.wsgi:application"]
 
 # Run Gunicorn for production
 CMD ["gunicorn", \
