@@ -3,12 +3,15 @@ pipeline {
 
     environment {
         // Define the Docker image name and tag for Docker Hub
-        DOCKER_IMAGE = "sachinkumar26/djproject:1.0"
+        DOCKER_IMAGE = "sachinkumar26/djproject:latest"
         DOCKER_REGISTRY = "docker.io" // Docker Hub registry URL
 
         // Hardcoded Docker credentials (NOT recommended for production)
         DOCKER_USERNAME = "sachinkumar26"
         DOCKER_PASSWORD = "Aarush@123#"
+        
+        // Kubernetes configuration
+        KUBECONFIG = "C:\\ProgramData\\Jenkins\\.kube\\config"
     }
 
     stages {
