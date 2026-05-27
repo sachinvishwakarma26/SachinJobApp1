@@ -27,7 +27,7 @@ pipeline {
                 script {
                     if (isUnix()) {
                         // Build Docker image for Unix-based systems
-                        sh 'docker build -t $DOCKER_IMAGE --no-cache .'
+joining @ni                        sh 'docker build -t $DOCKER_IMAGE --no-cache .'
                     } else {
                         // Build Docker image for Windows systems
                         bat 'docker build -t %DOCKER_IMAGE% --no-cache .'
@@ -52,21 +52,35 @@ pipeline {
             }
         }
 
-        stage('Deploy to Kubernetes') {
-            steps {
-                script {
-                    if (isUnix()) {
-                        // Deploy to Kubernetes on Linux
-                        sh 'kubectl rollout restart deployment djproject-sachin'
-                        sh 'kubectl rollout status deployment/djproject-sachin --timeout=5m'
-                    } else {
-                        // Deploy to Kubernetes on Windows
-                        bat 'kubectl rollout restart deployment djproject-sachin'
-                        bat 'kubectl rollout status deployment/djproject-sachin --timeout=5m'
-                    }
-                }
+        // stage('Deploy to Kubernetes') {
+        //     steps {
+        //         script {
+        //             if (isUnix()) {
+        //                 // Deploy to Kubernetes on Linux
+        //                 sh 'kubectl rollout restart deployment djproject-sachin'
+        //                 sh 'kubectl rollout status deployment/djproject-sachin --timeout=5m'
+        //             } else {
+        //                 // Deploy to Kubernetes on Windows
+        //                 bat 'kubectl rollout restart deployment djproject-sachin'
+        //                 bat 'kubectl rollout status deployment/djproject-sachin --timeout=5m'
+        //             }
+        //         }
+        //     }
+        // }
+        stage('Kubernetes Rollout') {
+    steps {
+            script {
+                sh '''
+                    echo "=== Kubernetes Debug Info ==="
+                    kubectl cluster-info || true
+                    kubectl config current-context || true
+                    kubectl get nodes || true
+                    echo "=== Attempting Rollout ==="
+                    kubectl rollout restart deployment djproject-sachin -n <namespace>
+                '''
             }
         }
+    }
     }
 
     post {
