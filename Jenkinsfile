@@ -27,7 +27,7 @@ pipeline {
                 script {
                     if (isUnix()) {
                         // Build Docker image for Unix-based systems
-joining @ni                        sh 'docker build -t $DOCKER_IMAGE --no-cache .'
+                        sh 'docker build -t $DOCKER_IMAGE --no-cache .'
                     } else {
                         // Build Docker image for Windows systems
                         bat 'docker build -t %DOCKER_IMAGE% --no-cache .'
@@ -68,19 +68,32 @@ joining @ni                        sh 'docker build -t $DOCKER_IMAGE --no-cache 
         //     }
         // }
         stage('Kubernetes Rollout') {
-    steps {
-            script {
-                sh '''
-                    echo "=== Kubernetes Debug Info ==="
-                    kubectl cluster-info || true
-                    kubectl config current-context || true
-                    kubectl get nodes || true
-                    echo "=== Attempting Rollout ==="
-                    kubectl rollout restart deployment djproject-sachin -n <namespace>
-                '''
+            steps {
+                script {
+                    if (isUnix()) {
+                        sh '''
+                            echo "=== Kubernetes Debug Info ==="
+                            kubectl cluster-info || true
+                            kubectl config current-context || true
+                            kubectl get nodes || true
+                            echo "=== Attempting Rollout ==="
+                            kubectl rollout restart deployment djproject-sachin
+                            kubectl rollout status deployment/djproject-sachin --timeout=5m
+                        '''
+                    } else {
+                        bat '''
+                            echo === Kubernetes Debug Info ===
+                            kubectl cluster-info || exit /b 0
+                            kubectl config current-context || exit /b 0
+                            kubectl get nodes || exit /b 0
+                            echo === Attempting Rollout ===
+                            kubectl rollout restart deployment djproject-sachin
+                            kubectl rollout status deployment/djproject-sachin --timeout=5m
+                        '''
+                    }
+                }
             }
         }
-    }
     }
 
     post {
