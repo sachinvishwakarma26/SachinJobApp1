@@ -1,9 +1,15 @@
 from django.shortcuts import render
 from django.core.paginator import Paginator, PageNotAnInteger, EmptyPage
+from django.http import JsonResponse
 from testapp.models import blorejobs, chennaijobs, hydjobs, punejobs, noidajobs
 
 # Create your views here.
 # This is Django version 3
+
+
+def health_check(request):
+    """Simple health check endpoint for Kubernetes"""
+    return JsonResponse({'status': 'healthy'})
 
 
 def index(request):

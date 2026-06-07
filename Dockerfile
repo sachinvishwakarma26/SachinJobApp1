@@ -4,7 +4,7 @@
 
 # Stage 1: Builder - Install dependencies
 # ============================================================================
-FROM python:3.8-slim as builder
+FROM python:3.10-slim AS builder
 
 WORKDIR /build
 
@@ -14,16 +14,16 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     libpq-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Copy requirements
-COPY djproject/requirements.txt .
+# Copy requirements (from project root)
+COPY requirements.txt .
 
-# Create wheels directory and install Python packages
-RUN pip wheel --no-cache-dir --no-deps --wheel-dir /build/wheels -r requirements.txt
+# Create wheels and install packages
+RUN pip wheel --no-cache-dir --wheel-dir /build/wheels -r requirements.txt
 
 
 # Stage 2: Runtime - Final image
 # ============================================================================
-FROM python:3.8-slim
+FROM python:3.10-slim
 
 # Metadata
 LABEL maintainer="Sachin Kumar <sachin@example.com>"
@@ -35,6 +35,7 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
     PIP_NO_CACHE_DIR=1 \
     PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    PYTHONPATH=/app/djproject \
     DJANGO_SETTINGS_MODULE=djproject.settings
 
 # Install runtime dependencies only
@@ -47,7 +48,6 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 # Create non-root user for security
 RUN groupadd -r django && useradd -r -g django django
 
-# Set working directory
 WORKDIR /app
 
 # Copy wheels from builder stage
@@ -58,22 +58,27 @@ COPY --from=builder /build/requirements.txt .
 RUN pip install --no-cache-dir --no-index --find-links=/wheels -r requirements.txt && \
     rm -rf /wheels
 
-# Copy application code
-COPY --chown=django:django djproject/ /app/
+# Copy application code with correct ownership
+COPY --chown=django:django . /app/
 
-# Create necessary directories
-RUN mkdir -p /app/staticfiles /app/media && \
+# Create and own necessary directories
+RUN mkdir -p /app/djproject/staticfiles /app/djproject/media && \
     chown -R django:django /app
+
+# Collect static files (as root, before switching to django user)
+RUN cd /app/djproject && python manage.py collectstatic --noinput --clear
+
+# Set working directory to Django project root (where manage.py is)
+WORKDIR /app/djproject
 
 # Switch to non-root user
 USER django
 
-# Expose port
 EXPOSE 8000
 
-# Health check
+# Health check - just verify port is listening
 HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:8000/health/ || exit 1
+    CMD curl -f http://localhost:8000/ || exit 1
 
 # Run Gunicorn for production
 CMD ["gunicorn", \

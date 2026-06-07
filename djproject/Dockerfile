@@ -2,7 +2,7 @@
 # Development Dockerfile for Django Application (Easy Setup)
 # ============================================================================
 
-FROM python:3.8-slim
+FROM python:3.10-slim
 
 LABEL maintainer="Sachin Kumar <sachin@example.com>"
 LABEL description="Django Job Application - Development"
